@@ -12,10 +12,6 @@ const questionsLength = questions.length;
 
 let review = "";
 
-function append(content) {
-    fs.appendFileSync("./reviews.txt", content);
-}
-
 let index = 0;
 function ask(index) {
     console.log(questions[index]);
@@ -39,7 +35,15 @@ process.stdin.on("data", (data) => {
                 review += "\u27A9 " + answers[i] + '\n';
             }
         }
-        append(review);
-        process.exit();
+        const appendAndExitApp = new Promise(appendReview);
+        appendAndExitApp.finally(exitApp);
     }
 });
+
+function appendReview(resolve, reject) {
+    fs.appendFile("./reviews.txt", review, error => error ? console.log(error) : resolve())
+}
+function exitApp() {
+    console.log("Closing app");
+    process.exit(0);
+}
