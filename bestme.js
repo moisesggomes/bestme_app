@@ -1,49 +1,61 @@
 const date = require("./date.js");
 const fs = require("fs");
+const { resolve } = require("path");
 
 const questions = [
-    "😎 " + "O que aprendi hoje?",
-    "👎 " + "O que me deixou aborrecido? E o que eu poderia fazer para melhorar?",
-    "😄 " + "O que me deixou feliz hoje?",
-    "🤝 " + "Quantas pessoas ajudei hoje?"
+    "😎 O que aprendi hoje?",
+    "👎 O que me deixou aborrecido? E o que eu poderia fazer para melhorar?",
+    "😄 O que me deixou feliz hoje?",
+    "🤝 Quantas pessoas ajudei hoje?"
 ];
 const answers = [];
-const questionsLength = questions.length;
 
-let review = "";
+let questionIndex = 0;
+printQuestion(questionIndex);
 
-let index = 0;
-function ask(index) {
-    console.log(questions[index]);
+process.stdin.on("data", processAnswerAndPrintNextQuestion);
+
+function processAnswerAndPrintNextQuestion(answer) {
+	processAnswer(answer);
+	printQuestion(++questionIndex);
 }
-ask(index);
 
-process.stdin.on("data", (data) => {
-    let answer = data.toString().trim();
+function processAnswer(answer) {
+    answer = answer.toString().trim();
     answers.push(answer);
-    const answersLength = answers.length;
+}
 
-    if (answersLength < questionsLength) {
-        ask(++index);
-    } else {
-        review += `Dia: ${date}\n\n`;
-        for (let i = 0; i < answersLength; i++) {
-            review += questions[i] + '\n';
-            if (i === answersLength - 1) {
-                review += "\u27A9 " + answers[i] + "\n\n\n";
-            } else {
-                review += "\u27A9 " + answers[i] + '\n';
-            }
-        }
-        const appendAndExitApp = new Promise(appendReview);
-        appendAndExitApp.finally(exitApp);
-    }
-});
+function printQuestion(index) {
+	if (isNotLastQuestion(index))
+		console.log(questions[index]);
+	else
+		appendReviewAndExit();
+}
+
+function isNotLastQuestion(index) {
+	return index < questions.length;
+}
+
+function appendReviewAndExit() {
+	const appendAndExit = new Promise(appendReview);
+	appendAndExit.finally(exit);
+}
 
 function appendReview(resolve, reject) {
-    fs.appendFile("./reviews.txt", review, error => error ? console.log(error) : resolve())
+	const review = writeReview();
+	fs.appendFile("./reviews.txt", review, (error) => {
+		return error ? console.log(error) : resolve()
+	});
 }
-function exitApp() {
-    console.log("Closing app");
-    process.exit(0);
+
+function writeReview() {
+	let review = `Dia: ${date}\n\n`;
+	for (let i = 0, n = answers.length; i < n; i++)
+		review += questions[i] + '\n' + "\u27A9 " + answers[i] + '\n\n';
+	return review;
+}
+
+function exit() {
+	console.log("Closing app");
+	process.exit();
 }
