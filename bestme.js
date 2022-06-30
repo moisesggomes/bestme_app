@@ -1,6 +1,5 @@
 const date = require("./date.js");
 const fs = require("fs");
-const { resolve } = require("path");
 
 const questions = [
     "😎 O que aprendi hoje?",
@@ -13,16 +12,14 @@ const answers = [];
 let questionIndex = 0;
 printQuestion(questionIndex);
 
-process.stdin.on("data", processAnswerAndPrintNextQuestion);
-
-function processAnswerAndPrintNextQuestion(answer) {
-	processAnswer(answer);
+process.stdin.on("data", (answer) => {
+	addToAnswers(answer);
 	printQuestion(++questionIndex);
-}
+});
 
-function processAnswer(answer) {
-    answer = answer.toString().trim();
-    answers.push(answer);
+function addToAnswers(answer) {
+	answer = answer.toString().trim();
+	answers.push(answer);
 }
 
 function printQuestion(index) {
@@ -44,14 +41,14 @@ function appendReviewAndExit() {
 function appendReview(resolve, reject) {
 	const review = writeReview();
 	fs.appendFile("./reviews.txt", review, (error) => {
-		return error ? console.log(error) : resolve()
+		return error ? console.log(error) : resolve();
 	});
 }
 
 function writeReview() {
-	let review = `Dia: ${date}\n\n`;
+	let review = `\nDia: ${date}\n`;
 	for (let i = 0, n = answers.length; i < n; i++)
-		review += questions[i] + '\n' + "\u27A9 " + answers[i] + '\n\n';
+		review += questions[i] + '\n' + "\u27A9 " + answers[i] + '\n';
 	return review;
 }
 
